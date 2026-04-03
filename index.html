@@ -7,124 +7,181 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --main-green: #00ff41; --bg-dark: #0a0a0a; --card-bg: #141414; }
-        body { background-color: var(--bg-dark); color: #e0e0e0; font-family: 'Courier New', monospace; margin: 0; padding-bottom: 70px; }
+        body { background-color: var(--bg-dark); color: #e0e0e0; font-family: 'Courier New', monospace; margin: 0; padding-bottom: 70px; display: flex; justify-content: center; }
         
-        /* Сетка заказов */
-        .container { padding: 15px; display: grid; gap: 15px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-        
+        /* Ограничитель ширины для ПК */
+        .main-wrapper { width: 100%; max-width: 600px; min-height: 100vh; background: #000; border-left: 1px solid #222; border-right: 1px solid #222; position: relative; }
+
         .header { text-align: center; padding: 20px; border-bottom: 1px solid #222; }
         .glitch { font-size: 24px; font-weight: bold; text-shadow: 2px 0 red, -2px 0 blue; }
         
+        .container { padding: 15px; }
+        
         /* Поиск */
         .search-box { padding: 10px 15px; }
-        .search-box input { width: 100%; background: #000; border: 1px solid var(--main-green); color: var(--main-green); padding: 10px; box-sizing: border-box; }
+        .search-box input { width: 100%; background: #000; border: 1px solid var(--main-green); color: var(--main-green); padding: 10px; box-sizing: border-box; outline: none; }
 
         /* Карточка заказа */
-        .order-card { background: var(--card-bg); border: 1px solid #333; padding: 15px; border-radius: 4px; transition: 0.3s; }
+        .order-card { background: var(--card-bg); border: 1px solid #333; padding: 15px; margin-bottom: 15px; border-radius: 4px; cursor: pointer; transition: 0.3s; }
         .order-card:hover { border-color: var(--main-green); }
-        .order-card h3 { margin: 0 0 10px 0; color: #fff; }
-        .order-card .price { color: var(--main-green); font-weight: bold; }
+        .order-card h3 { margin: 0 0 5px 0; color: #fff; font-size: 18px; }
+        .order-card .price { color: var(--main-green); font-weight: bold; margin-bottom: 10px; }
         
-        /* Навигация (Bottom Bar) */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: #000; display: flex; border-top: 1px solid #222; }
+        /* Скрытое описание */
+        .order-desc { display: none; font-size: 14px; color: #aaa; margin-top: 10px; border-top: 1px dashed #333; padding-top: 10px; }
+        .order-card.open .order-desc { display: block; }
+        
+        /* Навигация */
+        .nav-bar { position: absolute; bottom: 0; width: 100%; background: #000; display: flex; border-top: 1px solid #222; }
         .nav-item { flex: 1; text-align: center; padding: 15px; font-size: 12px; cursor: pointer; color: #666; }
         .nav-item.active { color: var(--main-green); border-top: 2px solid var(--main-green); }
 
-        /* Скрытые секции */
         .section { display: none; }
         .section.active { display: block; }
         
         .form-group { margin-bottom: 15px; }
-        input, textarea { width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #fff; box-sizing: border-box; }
-        .btn { background: var(--main-green); color: #000; border: none; padding: 12px; width: 100%; font-weight: bold; cursor: pointer; }
+        input, textarea { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: #fff; box-sizing: border-box; font-family: inherit; }
+        .btn { background: var(--main-green); color: #000; border: none; padding: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        
+        h2 { border-left: 4px solid var(--main-green); padding-left: 10px; font-size: 20px; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div class="glitch">CXI // CORE</div>
-    <div id="user-status" style="font-size: 10px; margin-top: 5px;">CONNECTING...</div>
-</div>
-
-<div id="tab-catalog" class="section active">
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="ПОИСК ПО КЛЮЧАМ..." oninput="filterOrders()">
+<div class="main-wrapper">
+    <div class="header">
+        <div class="glitch">CXI // CORE</div>
+        <div id="user-status" style="font-size: 10px; margin-top: 5px;">SYSTEM ONLINE</div>
     </div>
-    <div class="container" id="ordersList">
-        <div class="order-card" data-title="Бот на Python">
-            <h3>Бот на Python</h3>
-            <p>Нужно сделать чекер для NFT...</p>
-            <div class="price">4500 RUB</div>
-            <button class="btn" style="margin-top:10px;" onclick="takeOrder('001')">ОТКЛИКНУТЬСЯ</button>
+
+    <div id="tab-catalog" class="section active">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="ПОИСК ПО КЛЮЧАМ..." oninput="filterOrders()">
+        </div>
+        <div class="container" id="ordersList">
+            </div>
+    </div>
+
+    <div id="tab-add" class="section">
+        <div class="container">
+            <h2>НОВЫЙ КОНТРАКТ</h2>
+            <div class="form-group">
+                <input type="text" id="orderTitle" placeholder="НАЗВАНИЕ (Н-Р: БОТ ТЕЛЕГРАМ)">
+            </div>
+            <div class="form-group">
+                <textarea id="orderDesc" rows="5" placeholder="ПОДРОБНОЕ ТЕХНИЧЕСКОЕ ЗАДАНИЕ..."></textarea>
+            </div>
+            <div class="form-group">
+                <input type="number" id="orderPrice" placeholder="БЮДЖЕТ (RUB)">
+            </div>
+            <button class="btn" onclick="publishOrder()">ОПУБЛИКОВАТЬ</button>
         </div>
     </div>
-</div>
 
-<div id="tab-add" class="section">
-    <div class="container">
-        <h2>НОВЫЙ КОНТРАКТ</h2>
-        <div class="form-group">
-            <input type="text" id="orderTitle" placeholder="НАЗВАНИЕ">
+    <div id="tab-profile" class="section">
+        <div class="container">
+            <h2 id="userName">АНОНИМ</h2>
+            <p style="font-size: 12px; color: #666;">ID: <span id="userId">---</span></p>
+            <hr border="0" style="border-top: 1px solid #222; margin: 20px 0;">
+            <h3>МОИ ОБЪЯВЛЕНИЯ</h3>
+            <div id="myOrdersList" style="font-size: 14px; color: #888;">
+                У вас пока нет активных контрактов.
+            </div>
         </div>
-        <div class="form-group">
-            <textarea id="orderDesc" rows="5" placeholder="ТЕХНИЧЕСКОЕ ЗАДАНИЕ"></textarea>
-        </div>
-        <div class="form-group">
-            <input type="number" id="orderPrice" placeholder="БЮДЖЕТ (RUB)">
-        </div>
-        <button class="btn" onclick="publishOrder()">ОПУБЛИКОВАТЬ</button>
     </div>
-</div>
 
-<div id="tab-profile" class="section">
-    <div class="container">
-        <h2 id="userName">АНОНИМ</h2>
-        <p>Сделок закрыто: 0</p>
-        <p>Твой лимит: 2 активных заказа</p>
-        <button class="btn" style="background: #333; color: #fff;">КУПИТЬ СЛОТ (50 Stars)</button>
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="showTab('catalog', this)">КАТАЛОГ</div>
+        <div class="nav-item" onclick="showTab('add', this)">ДОБАВИТЬ</div>
+        <div class="nav-item" onclick="showTab('profile', this)">ПРОФИЛЬ</div>
     </div>
-</div>
-
-<div class="nav-bar">
-    <div class="nav-item active" onclick="showTab('catalog', this)">КАТАЛОГ</div>
-    <div class="nav-item" onclick="showTab('add', this)">ДОБАВИТЬ</div>
-    <div class="nav-item" onclick="showTab('profile', this)">ПРОФИЛЬ</div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
     
+    let orders = [
+        { id: '001', title: 'Бот на Python', price: '4500', desc: 'Нужно написать чекер для NFT подарков на Fragment. Работа с API.', owner: 'system' }
+    ];
+
     document.getElementById('userName').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "АНОНИМ";
+    document.getElementById('userId').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "000000";
 
     function showTab(tabId, el) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         document.getElementById('tab-' + tabId).classList.add('active');
         el.classList.add('active');
+        renderOrders();
     }
 
-    function filterOrders() {
-        let val = document.getElementById('searchInput').value.toLowerCase();
-        document.querySelectorAll('.order-card').forEach(card => {
-            let title = card.getAttribute('data-title').toLowerCase();
-            card.style.display = title.includes(val) ? "block" : "none";
+    function renderOrders() {
+        const list = document.getElementById('ordersList');
+        const myList = document.getElementById('myOrdersList');
+        list.innerHTML = '';
+        myList.innerHTML = '';
+
+        orders.forEach(order => {
+            const card = document.createElement('div');
+            card.className = 'order-card';
+            card.onclick = () => card.classList.toggle('open');
+            card.innerHTML = `
+                <h3>${order.title}</h3>
+                <div class="price">${order.price} RUB</div>
+                <div class="order-desc">
+                    ${order.desc}
+                    <button class="btn" onclick="takeOrder('${order.id}')">ОТКЛИКНУТЬСЯ</button>
+                </div>
+            `;
+            list.appendChild(card);
+
+            // Если это наш заказ (условно проверяем по названию для прототипа)
+            if(order.owner === 'me') {
+                const myItem = document.createElement('div');
+                myItem.style.padding = '10px';
+                myItem.style.borderBottom = '1px solid #222';
+                myItem.innerHTML = `• ${order.title} (${order.price} ₽)`;
+                myList.appendChild(myItem);
+            }
         });
+        
+        if (myList.innerHTML === '') myList.innerText = 'У вас пока нет активных контрактов.';
     }
 
     function publishOrder() {
-        const data = {
-            action: "new_order",
-            title: document.getElementById('orderTitle').value,
-            price: document.getElementById('orderPrice').value,
-            desc: document.getElementById('orderDesc').value
+        const title = document.getElementById('orderTitle').value;
+        const price = document.getElementById('orderPrice').value;
+        const desc = document.getElementById('orderDesc').value;
+
+        if(!title || !price) return alert("Заполни поля!");
+
+        const newOrder = {
+            id: Date.now().toString(),
+            title: title,
+            price: price,
+            desc: desc,
+            owner: 'me'
         };
-        tg.sendData(JSON.stringify(data));
+
+        orders.unshift(newOrder); // Добавляем в начало списка
+        
+        // Отправляем боту
+        tg.sendData(JSON.stringify({action: "new_order", title, price, desc}));
+        
+        // Очищаем и переходим в каталог
+        document.getElementById('orderTitle').value = '';
+        document.getElementById('orderPrice').value = '';
+        document.getElementById('orderDesc').value = '';
+        showTab('catalog', document.querySelectorAll('.nav-item')[0]);
     }
-    
+
     function takeOrder(id) {
         tg.sendData(JSON.stringify({action: "take_order", id: id}));
+        tg.close();
     }
+
+    renderOrders(); // Инициализация
 </script>
 </body>
 </html>

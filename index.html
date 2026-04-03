@@ -67,11 +67,59 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
+    // Когда зальешь бота на Amvera, замени localhost на адрес от Amvera
+    const API_URL = "http://localhost:8000"; 
+
+    // Функция загрузки заказов с сервера
+    async function renderOrders() {
+        try {
+            const response = await fetch(`${API_URL}/get_orders`);
+            const data = await response.json();
+            const list = document.getElementById('ordersList');
+            list.innerHTML = '';
+
+            if (data.length === 0) {
+                list.innerHTML = '<p style="color: #666; text-align: center;">Заказов пока нет</p>';
+                return;
+            }
+
+            data.forEach(order => {
+                const card = document.createElement('div');
+                card.className = 'order-card';
+                // Добавляем стиль для скрытого описания, чтобы оно раскрывалось
+                card.innerHTML = `
+                    <h3>${order.title}</h3>
+                    <div class="price">${order.price} RUB</div>
+                    <div class="order-info" style="font-size: 14px; color: #aaa; margin-top: 10px;">
+                        ${order.description}
+                        <button class="btn" style="margin-top:10px;" onclick="takeOrder('${order.id}', event)">ОТКЛИКНУТЬСЯ</button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        } catch (e) {
+            console.error("Ошибка API:", e);
+            document.getElementById('ordersList').innerHTML = '<p style="color: red; text-align: center;">Ошибка связи с сервером</p>';
+        }
+    }
+
+    // Функция для кнопки отклика
+    function takeOrder(orderId, event) {
+        event.stopPropagation();
+        // Перенаправляем в бота с параметром заказа
+        // Замени 'ТВОЙ_БОТ' на юзернейм своего бота без @
+        const botUsername = "cxi_contract_bot"; 
+        tg.openTelegramLink(`https://t.me/${botUsername}?start=take_${orderId}`);
+    }
+
     function showTab(tabId, el) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         document.getElementById('tab-' + tabId).classList.add('active');
         el.classList.add('active');
+        
+        // Если переходим на вкладку каталог — обновляем список
+        if(tabId === 'catalog') renderOrders();
     }
 
     function sendToBot() {
@@ -83,13 +131,17 @@
 
         const data = { action: "new_order", title, price, desc };
         
-        // Пытаемся отправить данные. Если не сработает (на мобилах), юзеру придется юзать кнопку меню.
         try {
             tg.sendData(JSON.stringify(data));
         } catch(e) {
             alert("Ошибка отправки. Попробуй открыть приложение через кнопку меню в боте.");
         }
     }
+
+    // Запускаем загрузку при старте
+    renderOrders();
+
+
 </script>
 </body>
 </html>

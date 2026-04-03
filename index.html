@@ -7,141 +7,169 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --main-green: #00ff41; --bg-dark: #0a0a0a; --card-bg: #141414; }
-        body { background-color: var(--bg-dark); color: #e0e0e0; font-family: 'Courier New', monospace; margin: 0; padding-bottom: 70px; display: flex; justify-content: center; overflow-x: hidden; }
-        .main-wrapper { width: 100%; max-width: 600px; min-height: 100vh; background: #000; border-left: 1px solid #222; border-right: 1px solid #222; }
+        body { background-color: var(--bg-dark); color: #e0e0e0; font-family: 'Courier New', monospace; margin: 0; padding-bottom: 70px; display: flex; justify-content: center; }
+        .main-wrapper { width: 100%; max-width: 600px; min-height: 100vh; background: #000; position: relative; }
         .header { text-align: center; padding: 20px; border-bottom: 1px solid #222; }
-        .glitch { font-size: 24px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; }
+        .glitch { font-size: 20px; font-weight: bold; letter-spacing: 2px; }
         .container { padding: 15px; }
         
-        .order-card, .chat-card { background: var(--card-bg); border: 1px solid #333; padding: 15px; margin-bottom: 10px; border-radius: 2px; }
-        .price { color: var(--main-green); font-weight: bold; margin: 5px 0; }
+       
+        .order-card { background: var(--card-bg); border: 1px solid #333; padding: 15px; margin-bottom: 10px; border-radius: 4px; transition: transform 0.2s ease, border-color 0.2s ease; }
+        .order-card:active { transform: scale(0.98); border-color: var(--main-green); }
+        .price { color: var(--main-green); font-weight: bold; margin: 5px 0; font-size: 18px; }
         
-        .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 600px; background: #000; display: flex; border-top: 1px solid #222; }
-        .nav-item { flex: 1; text-align: center; padding: 15px 0; font-size: 12px; cursor: pointer; color: #555; }
-        .nav-item.active { color: var(--main-green); border-top: 2px solid var(--main-green); }
-
-        .section { display: none; }
+        
+        .section { display: none; opacity: 0; animation: fadeIn 0.3s forwards; }
         .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        input, textarea { width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: #fff; margin-bottom: 10px; box-sizing: border-box; }
-        .btn { background: var(--main-green); color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        h2 { border-left: 4px solid var(--main-green); padding-left: 10px; font-size: 18px; text-transform: uppercase; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 600px; background: #000; display: flex; border-top: 1px solid #222; z-index: 100; }
+        .nav-item { flex: 1; text-align: center; padding: 15px 0; font-size: 12px; cursor: pointer; color: #555; transition: color 0.3s; }
+        .nav-item.active { color: var(--main-green); border-top: 2px solid var(--main-green); }
+        
+        input, textarea { width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: #fff; margin-bottom: 15px; box-sizing: border-box; font-family: inherit; transition: border-color 0.3s; }
+        input:focus, textarea:focus { outline: none; border-color: var(--main-green); }
+        .btn { background: var(--main-green); color: #000; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 4px; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.8; }
+        h2 { border-left: 3px solid var(--main-green); padding-left: 10px; font-size: 16px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div class="main-wrapper">
-    <div class="header"><div class="glitch">CXI // TERMINAL</div></div>
+    <div class="header"><div class="glitch" id="header-title">CXI // КАТАЛОГ</div></div>
 
     <div id="tab-catalog" class="section active">
         <div class="container" id="ordersList">
-            <p style="text-align: center; color: #444;">ПОИСК АКТИВНЫХ КОНТРАКТОВ...</p>
+            <p style="text-align: center; color: #444;">Загрузка данных...</p>
         </div>
     </div>
 
     <div id="tab-add" class="section">
         <div class="container">
-            <h2>СОЗДАТЬ ЗАПРОС</h2>
-            <input type="text" id="orderTitle" placeholder="НАЗВАНИЕ">
-            <textarea id="orderDesc" rows="4" placeholder="ТЕХНИЧЕСКОЕ ЗАДАНИЕ"></textarea>
-            <input type="number" id="orderPrice" placeholder="БЮДЖЕТ (RUB)">
-            <button class="btn" onclick="sendToBot()">ОПУБЛИКОВАТЬ</button>
+            <h2>НОВЫЙ КОНТРАКТ</h2>
+            <input type="text" id="orderTitle" placeholder="Название (напр. Telegram Bot)">
+            <textarea id="orderDesc" rows="4" placeholder="Краткое ТЗ..."></textarea>
+            <input type="number" id="orderPrice" placeholder="Бюджет (RUB)">
+            <button class="btn" onclick="submitOrder()">ОПУБЛИКОВАТЬ</button>
         </div>
     </div>
 
-    <div id="tab-chats" class="section">
+    <div id="tab-profile" class="section">
         <div class="container">
-            <h2>МОИ ДИАЛОГИ</h2>
-            <p style="color: #444;">НЕТ АКТИВНЫХ ЧАТОВ</p>
+            <h2>МОИ КОНТРАКТЫ</h2>
+            <div id="myOrdersList"></div>
         </div>
     </div>
 
     <div class="nav-bar">
-        <div class="nav-item active" onclick="showTab('catalog', this)">КАТАЛОГ</div>
-        <div class="nav-item" onclick="showTab('add', this)">ДОБАВИТЬ</div>
-        <div class="nav-item" onclick="showTab('chats', this)">ЧАТЫ</div>
+        <div class="nav-item active" onclick="switchTab('catalog', this, 'КАТАЛОГ')">КАТАЛОГ</div>
+        <div class="nav-item" onclick="switchTab('add', this, 'СОЗДАНИЕ')">ДОБАВИТЬ</div>
+        <div class="nav-item" onclick="switchTab('profile', this, 'ПРОФИЛЬ')">ПРОФИЛЬ</div>
     </div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
-
-    // Когда зальешь бота на Amvera, замени localhost на адрес от Amvera
+    
+    
+    const USER_ID = tg.initDataUnsafe?.user?.id || 123456789; 
+    
+    
     const API_URL = "http://localhost:8000"; 
 
-    // Функция загрузки заказов с сервера
-    async function renderOrders() {
-        try {
-            const response = await fetch(`${API_URL}/get_orders`);
-            const data = await response.json();
-            const list = document.getElementById('ordersList');
-            list.innerHTML = '';
-
-            if (data.length === 0) {
-                list.innerHTML = '<p style="color: #666; text-align: center;">Заказов пока нет</p>';
-                return;
-            }
-
-            data.forEach(order => {
-                const card = document.createElement('div');
-                card.className = 'order-card';
-                // Добавляем стиль для скрытого описания, чтобы оно раскрывалось
-                card.innerHTML = `
-                    <h3>${order.title}</h3>
-                    <div class="price">${order.price} RUB</div>
-                    <div class="order-info" style="font-size: 14px; color: #aaa; margin-top: 10px;">
-                        ${order.description}
-                        <button class="btn" style="margin-top:10px;" onclick="takeOrder('${order.id}', event)">ОТКЛИКНУТЬСЯ</button>
-                    </div>
-                `;
-                list.appendChild(card);
-            });
-        } catch (e) {
-            console.error("Ошибка API:", e);
-            document.getElementById('ordersList').innerHTML = '<p style="color: red; text-align: center;">Ошибка связи с сервером</p>';
-        }
-    }
-
-    // Функция для кнопки отклика
-    function takeOrder(orderId, event) {
-        event.stopPropagation();
-        // Перенаправляем в бота с параметром заказа
-        // Замени 'ТВОЙ_БОТ' на юзернейм своего бота без @
-        const botUsername = "cxi_contract_bot"; 
-        tg.openTelegramLink(`https://t.me/${botUsername}?start=take_${orderId}`);
-    }
-
-    function showTab(tabId, el) {
+    function switchTab(tabId, el, title) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        
         document.getElementById('tab-' + tabId).classList.add('active');
         el.classList.add('active');
-        
-        // Если переходим на вкладку каталог — обновляем список
-        if(tabId === 'catalog') renderOrders();
+        document.getElementById('header-title').innerText = "CXI // " + title;
+
+        if(tabId === 'catalog') loadOrders();
+        if(tabId === 'profile') loadMyOrders();
     }
 
-    function sendToBot() {
-        const title = document.getElementById('orderTitle').value;
-        const price = document.getElementById('orderPrice').value;
-        const desc = document.getElementById('orderDesc').value;
-
-        if(!title || !price) return alert("Заполни поля!");
-
-        const data = { action: "new_order", title, price, desc };
-        
+    
+    async function loadOrders() {
         try {
-            tg.sendData(JSON.stringify(data));
-        } catch(e) {
-            alert("Ошибка отправки. Попробуй открыть приложение через кнопку меню в боте.");
+            const res = await fetch(`${API_URL}/api/orders`);
+            const data = await res.json();
+            renderList('ordersList', data, true);
+        } catch (e) {
+            document.getElementById('ordersList').innerHTML = '<p style="color:red;">Ошибка связи с сервером</p>';
         }
     }
 
-    // Запускаем загрузку при старте
-    renderOrders();
+    
+    async function loadMyOrders() {
+        try {
+            const res = await fetch(`${API_URL}/api/my_orders/${USER_ID}`);
+            const data = await res.json();
+            renderList('myOrdersList', data, false);
+        } catch (e) {
+            document.getElementById('myOrdersList').innerHTML = '<p style="color:red;">Ошибка сервера</p>';
+        }
+    }
 
+   
+    function renderList(elementId, data, showButton) {
+        const list = document.getElementById(elementId);
+        list.innerHTML = '';
+        if (data.length === 0) {
+            list.innerHTML = '<p style="text-align: center; color: #555;">Пусто</p>';
+            return;
+        }
+        data.forEach(order => {
+            const btnHtml = showButton ? `<button class="btn" style="margin-top:10px;" onclick="tg.openTelegramLink('https://t.me/cxi_contract_bot?start=take_${order.id}')">ОТКЛИКНУТЬСЯ</button>` : `<p style="color:#555; font-size:12px; margin-top:10px;">ID: ${order.id}</p>`;
+            
+            list.innerHTML += `
+                <div class="order-card">
+                    <h3 style="margin: 0 0 5px 0;">${order.title}</h3>
+                    <div class="price">${order.price} RUB</div>
+                    <div style="font-size: 14px; color: #aaa;">
+                        ${order.description}
+                        ${btnHtml}
+                    </div>
+                </div>
+            `;
+        });
+    }
 
+    
+    async function submitOrder() {
+        const title = document.getElementById('orderTitle').value;
+        const desc = document.getElementById('orderDesc').value;
+        const price = document.getElementById('orderPrice').value;
+
+        if(!title || !price) return tg.showAlert("Заполни название и бюджет!");
+
+        const payload = { owner_id: USER_ID, title: title, desc: desc, price: price };
+
+        try {
+            const res = await fetch(`${API_URL}/api/add_order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            
+            if(result.status === "ok") {
+                tg.showAlert("Контракт успешно опубликован!");
+                document.getElementById('orderTitle').value = '';
+                document.getElementById('orderDesc').value = '';
+                document.getElementById('orderPrice').value = '';
+              
+                document.querySelector('.nav-item').click(); 
+            }
+        } catch (e) {
+            tg.showAlert("Ошибка при отправке на сервер.");
+        }
+    }
+
+    
+    loadOrders();
 </script>
 </body>
 </html>

@@ -8,41 +8,34 @@
     <style>
         :root { --main-green: #00ff41; --bg-dark: #0a0a0a; --card-bg: #141414; }
         body { background-color: var(--bg-dark); color: #e0e0e0; font-family: 'Courier New', monospace; margin: 0; padding-bottom: 70px; display: flex; justify-content: center; }
-        
-    
         .main-wrapper { width: 100%; max-width: 600px; min-height: 100vh; background: #000; border-left: 1px solid #222; border-right: 1px solid #222; position: relative; }
-
         .header { text-align: center; padding: 20px; border-bottom: 1px solid #222; }
         .glitch { font-size: 24px; font-weight: bold; text-shadow: 2px 0 red, -2px 0 blue; }
-        
         .container { padding: 15px; }
         
-        
         .search-box { padding: 10px 15px; }
-        .search-box input { width: 100%; background: #000; border: 1px solid var(--main-green); color: var(--main-green); padding: 10px; box-sizing: border-box; outline: none; }
+        .search-box input { width: 100%; background: #000; border: 1px solid var(--main-green); color: var(--main-green); padding: 10px; outline: none; }
 
-       
-        .order-card { background: var(--card-bg); border: 1px solid #333; padding: 15px; margin-bottom: 15px; border-radius: 4px; cursor: pointer; transition: 0.3s; }
-        .order-card:hover { border-color: var(--main-green); }
-        .order-card h3 { margin: 0 0 5px 0; color: #fff; font-size: 18px; }
-        .order-card .price { color: var(--main-green); font-weight: bold; margin-bottom: 10px; }
-        
-        
+        .order-card, .chat-card { background: var(--card-bg); border: 1px solid #333; padding: 15px; margin-bottom: 15px; border-radius: 4px; cursor: pointer; transition: 0.3s; }
+        .order-card:hover, .chat-card:hover { border-color: var(--main-green); }
+        .order-card h3, .chat-card h3 { margin: 0 0 5px 0; color: #fff; font-size: 18px; }
+        .price { color: var(--main-green); font-weight: bold; margin-bottom: 10px; }
         .order-desc { display: none; font-size: 14px; color: #aaa; margin-top: 10px; border-top: 1px dashed #333; padding-top: 10px; }
         .order-card.open .order-desc { display: block; }
         
-        
-        .nav-bar { position: absolute; bottom: 0; width: 100%; background: #000; display: flex; border-top: 1px solid #222; }
-        .nav-item { flex: 1; text-align: center; padding: 15px; font-size: 12px; cursor: pointer; color: #666; }
+        /* Статусы чатов */
+        .chat-status.active { color: var(--main-green); font-size: 12px; }
+        .chat-status.closed { color: #ff003c; font-size: 12px; }
+
+        .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 600px; background: #000; display: flex; border-top: 1px solid #222; z-index: 100; }
+        .nav-item { flex: 1; text-align: center; padding: 15px 0; font-size: 11px; cursor: pointer; color: #666; font-weight: bold; }
         .nav-item.active { color: var(--main-green); border-top: 2px solid var(--main-green); }
 
         .section { display: none; }
         .section.active { display: block; }
-        
         .form-group { margin-bottom: 15px; }
-        input, textarea { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: #fff; box-sizing: border-box; font-family: inherit; }
+        input, textarea { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: #fff; box-sizing: border-box; }
         .btn { background: var(--main-green); color: #000; border: none; padding: 12px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        
         h2 { border-left: 4px solid var(--main-green); padding-left: 10px; font-size: 20px; }
     </style>
 </head>
@@ -59,22 +52,31 @@
             <input type="text" id="searchInput" placeholder="ПОИСК ПО КЛЮЧАМ..." oninput="filterOrders()">
         </div>
         <div class="container" id="ordersList">
-            </div>
+            <p style="color: #666; text-align: center;">Загрузка контрактов...</p>
+        </div>
     </div>
 
     <div id="tab-add" class="section">
         <div class="container">
             <h2>НОВЫЙ КОНТРАКТ</h2>
-            <div class="form-group">
-                <input type="text" id="orderTitle" placeholder="НАЗВАНИЕ (Н-Р: БОТ ТЕЛЕГРАМ)">
-            </div>
-            <div class="form-group">
-                <textarea id="orderDesc" rows="5" placeholder="ПОДРОБНОЕ ТЕХНИЧЕСКОЕ ЗАДАНИЕ..."></textarea>
-            </div>
-            <div class="form-group">
-                <input type="number" id="orderPrice" placeholder="БЮДЖЕТ (RUB)">
-            </div>
+            <div class="form-group"><input type="text" id="orderTitle" placeholder="НАЗВАНИЕ"></div>
+            <div class="form-group"><textarea id="orderDesc" rows="5" placeholder="ПОДРОБНОЕ ТЕХНИЧЕСКОЕ ЗАДАНИЕ..."></textarea></div>
+            <div class="form-group"><input type="number" id="orderPrice" placeholder="БЮДЖЕТ (RUB)"></div>
             <button class="btn" onclick="publishOrder()">ОПУБЛИКОВАТЬ</button>
+        </div>
+    </div>
+
+    <div id="tab-chats" class="section">
+        <div class="container" id="chatsList">
+            <h2>АКТИВНЫЕ ЧАТЫ</h2>
+            <div class="chat-card" onclick="openChat('user123')">
+                <h3>Заказ: Чекер NFT</h3>
+                <span class="chat-status active">ОТКРЫТ (2 новых сообщения)</span>
+            </div>
+            <div class="chat-card" style="opacity: 0.6;">
+                <h3>Заказ: Бот для мамы</h3>
+                <span class="chat-status closed">КОНТРАКТ ЗАКРЫТ (Только чтение)</span>
+            </div>
         </div>
     </div>
 
@@ -82,17 +84,16 @@
         <div class="container">
             <h2 id="userName">АНОНИМ</h2>
             <p style="font-size: 12px; color: #666;">ID: <span id="userId">---</span></p>
-            <hr border="0" style="border-top: 1px solid #222; margin: 20px 0;">
+            <hr style="border-top: 1px solid #222; margin: 20px 0;">
             <h3>МОИ ОБЪЯВЛЕНИЯ</h3>
-            <div id="myOrdersList" style="font-size: 14px; color: #888;">
-                У вас пока нет активных контрактов.
-            </div>
+            <div id="myOrdersList" style="font-size: 14px; color: #888;">Нет активных контрактов.</div>
         </div>
     </div>
 
     <div class="nav-bar">
         <div class="nav-item active" onclick="showTab('catalog', this)">КАТАЛОГ</div>
         <div class="nav-item" onclick="showTab('add', this)">ДОБАВИТЬ</div>
+        <div class="nav-item" onclick="showTab('chats', this)">ЧАТЫ</div>
         <div class="nav-item" onclick="showTab('profile', this)">ПРОФИЛЬ</div>
     </div>
 </div>
@@ -101,9 +102,11 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
     
-    let orders = [
-        { id: '001', title: 'Бот на Python', price: '4500', desc: 'Нужно написать чекер для NFT подарков на Fragment. Работа с API.', owner: 'system' }
-    ];
+    // ГЛОБАЛЬНАЯ НАСТРОЙКА БОТА: Сюда впиши юзернейм своего бота без @
+    const BOT_USERNAME = "ТВОЙ_ЮЗЕРНЕЙМ_БОТА_bot"; 
+
+    // База заказов теперь пустая, ждет API
+    let orders = [];
 
     document.getElementById('userName').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "АНОНИМ";
     document.getElementById('userId').innerText = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "000000";
@@ -113,15 +116,15 @@
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
         document.getElementById('tab-' + tabId).classList.add('active');
         el.classList.add('active');
-        renderOrders();
     }
 
     function renderOrders() {
         const list = document.getElementById('ordersList');
-        const myList = document.getElementById('myOrdersList');
+        if (orders.length === 0) {
+            list.innerHTML = '<p style="color: #666; text-align: center;">Нет доступных контрактов. Будь первым.</p>';
+            return;
+        }
         list.innerHTML = '';
-        myList.innerHTML = '';
-
         orders.forEach(order => {
             const card = document.createElement('div');
             card.className = 'order-card';
@@ -131,22 +134,11 @@
                 <div class="price">${order.price} RUB</div>
                 <div class="order-desc">
                     ${order.desc}
-                    <button class="btn" onclick="takeOrder('${order.id}')">ОТКЛИКНУТЬСЯ</button>
+                    <button class="btn" onclick="takeOrder('${order.id}', event)">ОТКЛИКНУТЬСЯ</button>
                 </div>
             `;
             list.appendChild(card);
-
-           
-            if(order.owner === 'me') {
-                const myItem = document.createElement('div');
-                myItem.style.padding = '10px';
-                myItem.style.borderBottom = '1px solid #222';
-                myItem.innerHTML = `• ${order.title} (${order.price} ₽)`;
-                myList.appendChild(myItem);
-            }
         });
-        
-        if (myList.innerHTML === '') myList.innerText = 'У вас пока нет активных контрактов.';
     }
 
     function publishOrder() {
@@ -154,31 +146,21 @@
         const price = document.getElementById('orderPrice').value;
         const desc = document.getElementById('orderDesc').value;
 
-        if(!title || !price) return alert("Заполни поля!");
+        if(!title || !price) return tg.showAlert("Заполни название и бюджет!");
 
-        const newOrder = {
-            id: Date.now().toString(),
-            title: title,
-            price: price,
-            desc: desc,
-            owner: 'me'
-        };
-
-        orders.unshift(newOrder);
-        
-       
+        // Отправляем в бота (пока через sendData, так как это разовая отправка)
         tg.sendData(JSON.stringify({action: "new_order", title, price, desc}));
-        
-        
-        document.getElementById('orderTitle').value = '';
-        document.getElementById('orderPrice').value = '';
-        document.getElementById('orderDesc').value = '';
-        showTab('catalog', document.querySelectorAll('.nav-item')[0]);
     }
 
-    function takeOrder(id) {
-        tg.sendData(JSON.stringify({action: "take_order", id: id}));
-        tg.close();
+    function takeOrder(id, event) {
+        event.stopPropagation(); // Чтобы карточка не закрывалась
+        // ИДЕАЛЬНОЕ РЕШЕНИЕ: Перекидываем юзера в бота с командой /start take_123
+        tg.openTelegramLink(`https://t.me/${BOT_USERNAME}?start=take_${id}`);
+    }
+
+    function openChat(chatId) {
+        // Заглушка для открытия чата
+        tg.showAlert("Здесь откроется история переписки по контракту.");
     }
 
     renderOrders(); 

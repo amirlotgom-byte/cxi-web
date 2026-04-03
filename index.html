@@ -9,7 +9,7 @@
         :root { --main-green: #00ff41; --bg-dark: #0a0a0a; --card-bg: #141414; }
         body { background-color: var(--bg-dark); color: #e0e0e0; font-family: 'Courier New', monospace; margin: 0; padding-bottom: 70px; display: flex; justify-content: center; }
         
-        /* Ограничитель ширины для ПК */
+    
         .main-wrapper { width: 100%; max-width: 600px; min-height: 100vh; background: #000; border-left: 1px solid #222; border-right: 1px solid #222; position: relative; }
 
         .header { text-align: center; padding: 20px; border-bottom: 1px solid #222; }
@@ -17,21 +17,21 @@
         
         .container { padding: 15px; }
         
-        /* Поиск */
+        
         .search-box { padding: 10px 15px; }
         .search-box input { width: 100%; background: #000; border: 1px solid var(--main-green); color: var(--main-green); padding: 10px; box-sizing: border-box; outline: none; }
 
-        /* Карточка заказа */
+       
         .order-card { background: var(--card-bg); border: 1px solid #333; padding: 15px; margin-bottom: 15px; border-radius: 4px; cursor: pointer; transition: 0.3s; }
         .order-card:hover { border-color: var(--main-green); }
         .order-card h3 { margin: 0 0 5px 0; color: #fff; font-size: 18px; }
         .order-card .price { color: var(--main-green); font-weight: bold; margin-bottom: 10px; }
         
-        /* Скрытое описание */
+        
         .order-desc { display: none; font-size: 14px; color: #aaa; margin-top: 10px; border-top: 1px dashed #333; padding-top: 10px; }
         .order-card.open .order-desc { display: block; }
         
-        /* Навигация */
+        
         .nav-bar { position: absolute; bottom: 0; width: 100%; background: #000; display: flex; border-top: 1px solid #222; }
         .nav-item { flex: 1; text-align: center; padding: 15px; font-size: 12px; cursor: pointer; color: #666; }
         .nav-item.active { color: var(--main-green); border-top: 2px solid var(--main-green); }
@@ -136,7 +136,7 @@
             `;
             list.appendChild(card);
 
-            // Если это наш заказ (условно проверяем по названию для прототипа)
+           
             if(order.owner === 'me') {
                 const myItem = document.createElement('div');
                 myItem.style.padding = '10px';
@@ -164,12 +164,12 @@
             owner: 'me'
         };
 
-        orders.unshift(newOrder); // Добавляем в начало списка
+        orders.unshift(newOrder);
         
-        // Отправляем боту
+       
         tg.sendData(JSON.stringify({action: "new_order", title, price, desc}));
         
-        // Очищаем и переходим в каталог
+        
         document.getElementById('orderTitle').value = '';
         document.getElementById('orderPrice').value = '';
         document.getElementById('orderDesc').value = '';
@@ -181,7 +181,7 @@
         tg.close();
     }
 
-    renderOrders(); // Инициализация
+    renderOrders(); 
 </script>
 </body>
 </html>
